@@ -3,8 +3,8 @@ primaryColor = "#4F46E5"
 
 [server]
 runOnSave = true
-# 同じ Wi-Fi のスマホなどからも開けるようにする。誰でも接続できるので、
-# app.py のパスワード画面（.env の APP_PASSWORD）とセットで使うこと
+# 同じ Wi-Fi のスマホなどからも開けるようにする。合言葉はないので、
+# 同じ Wi-Fi の人なら誰でも使える。信頼できる Wi-Fi でだけ起動すること
 address = "0.0.0.0"
 # アップロードの上限（MB）。既定の 200MB は大きすぎるため
 maxUploadSize = 5
