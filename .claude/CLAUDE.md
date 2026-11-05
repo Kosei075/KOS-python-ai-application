@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 概要
 
-Streamlit + Gemini API（`google-genai` SDK）で作った個人用 AI ライティングツール。DB なし。同じ Wi-Fi のスマホからも使えるよう LAN に公開しており（`server.address = "0.0.0.0"`）、`src/app.py` の `require_login` が、この Mac 以外からのアクセスにだけ `.env` の `APP_PASSWORD`（合言葉。URL の `?key=` かパスワード欄）を求める。この Mac かどうかは `st.context.ip_address is None`（ループバック）で判定する。AppTest ではこの値がモックになるので、スモークテストは `from_mac()` / `from_phone()` で固定している。UI 文言・プロンプト・コメントはすべて日本語。
+Streamlit + Gemini API（`google-genai` SDK）で作った個人用 AI ライティングツール。DB なし。同じ Wi-Fi のスマホからも使えるよう LAN に公開している（`server.address = "0.0.0.0"`）。合言葉などのログインはなく、同じ Wi-Fi の端末なら誰でも使える（ユーザーの選択）。この Mac かどうか（`st.context.ip_address is None`、ループバック）は、サイドバーの「📱 スマホで開く」を Mac だけに出すために使う。AppTest ではこの値がモックになるので、スモークテストは `from_mac()` / `from_phone()` で固定している。UI 文言・プロンプト・コメントはすべて日本語。
 
 ユーザーへの返答は、作業の合間の短い報告も含めてすべて日本語で書くこと。
 

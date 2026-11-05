@@ -52,9 +52,6 @@ from tools import {name}
     assert any(m.value == "OK" for m in at.markdown), f"{name}: 生成結果が表示されない"
 
 
-TEST_PASSWORD = "test-password"
-
-
 def app_env(**env):
     """app.py を、本物の .env を読まずにテスト用の環境変数で動かす。"""
     return mock.patch("dotenv.load_dotenv"), mock.patch.dict(os.environ, env)
@@ -74,11 +71,6 @@ def from_phone():
     return access_from("192.168.11.20")
 
 
-def login(at: AppTest, password: str) -> AppTest:
-    at.text_input[0].set_value(password)
-    return at.button[0].click().run()
-
-
 def tools_shown(at: AppTest) -> bool:
     return any("✨" in b.label for b in at.button)
 
@@ -87,41 +79,22 @@ def new_app() -> AppTest:
     return AppTest.from_file(str(SRC / "app.py"), default_timeout=30)
 
 
-def check_login() -> None:
-    no_dotenv, env = app_env(GEMINI_API_KEY="dummy", APP_PASSWORD=TEST_PASSWORD)
+def check_access() -> None:
+    no_dotenv, env = app_env(GEMINI_API_KEY="dummy")
     with no_dotenv, env, from_mac():
         at = new_app().run()
-        assert tools_shown(at), "この Mac からなのにログインを求められる"
+        assert tools_shown(at), "この Mac から使えない"
         assert any("📱" in e.label for e in at.sidebar.expander), "Mac のサイドバーにスマホ用 URL が無い"
 
-    no_dotenv, env = app_env(GEMINI_API_KEY="dummy", APP_PASSWORD="")
     with no_dotenv, env, from_phone():
         at = new_app().run()
-        assert any("APP_PASSWORD" in e.value for e in at.error), "合言葉が未設定なのにスマホから使えてしまう"
-        assert not at.sidebar.selectbox, "合言葉が未設定なのにサイドバーが表示されている"
-
-    no_dotenv, env = app_env(GEMINI_API_KEY="dummy", APP_PASSWORD=TEST_PASSWORD)
-    with no_dotenv, env, from_phone():
-        at = new_app().run()
-        assert not tools_shown(at), "スマホから合言葉なしで入れてしまう"
-        assert not at.sidebar.expander, "ログイン前にスマホ用 URL が見えている"
-        at = login(at, "wrong-password")
-        assert any("違います" in e.value for e in at.error), "間違ったパスワードで入れてしまう"
-        assert tools_shown(login(at, TEST_PASSWORD)), "正しいパスワードで入れない"
-
-        at = new_app()
-        at.query_params["key"] = "wrong-password"
-        assert not tools_shown(at.run()), "間違った合言葉の URL で入れてしまう"
-        at = new_app()
-        at.query_params["key"] = TEST_PASSWORD
-        at.run()
         assert not at.exception, at.exception
-        assert tools_shown(at), "合言葉入りの URL で入れない"
-        assert not at.sidebar.expander, "スマホにスマホ用 URL（合言葉）が表示されている"
+        assert tools_shown(at), "スマホから使えない"
+        assert not at.sidebar.expander, "スマホにスマホ用 URL が表示されている"
 
 
 def check_refine_and_history(history_file: Path) -> None:
-    no_dotenv, env = app_env(GEMINI_API_KEY="dummy", APP_PASSWORD=TEST_PASSWORD)
+    no_dotenv, env = app_env(GEMINI_API_KEY="dummy")
     with mock.patch("core.ui.stream_text", fake_stream), \
             mock.patch("core.history.HISTORY_FILE", history_file), no_dotenv, env, from_mac():
         at = new_app().run()
@@ -149,11 +122,11 @@ def main() -> None:
                 failed += 1
                 print(f"❌ {name}: {e}")
         try:
-            check_login()
-            print("✅ ログイン（Mac は不要・スマホは合言葉 URL かパスワード）")
+            check_access()
+            print("✅ アクセス（Mac・スマホとも合言葉なし）")
         except Exception as e:
             failed += 1
-            print(f"❌ ログイン: {e}")
+            print(f"❌ アクセス: {e}")
         try:
             check_refine_and_history(Path(tmp) / "history_app.json")
             print("✅ 生成 → 修正指示 → 履歴保存")
